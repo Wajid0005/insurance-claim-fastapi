@@ -1,19 +1,17 @@
+import os
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-
 from pydantic import BaseModel, Field, computed_field
-
 from typing import Literal, Annotated
-
 import pandas as pd
-import pickle
 import joblib
 
 # =====================================================
 # LOAD MODEL
 # =====================================================
 
-model = joblib.load("model.pkl")
+model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
+model = joblib.load(model_path)
 
 # =====================================================
 # CREATE FASTAPI APP
