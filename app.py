@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, computed_field
 from typing import Literal, Annotated
 import pandas as pd
@@ -10,8 +11,12 @@ import joblib
 # LOAD MODEL
 # =====================================================
 
-model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
-model = joblib.load(model_path)
+try:
+    model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
+    model = joblib.load(model_path)
+except Exception as e:
+    print(f"Error loading model: {e}")
+    model = None
 
 # =====================================================
 # CREATE FASTAPI APP
@@ -21,6 +26,15 @@ app = FastAPI(
     title="Insurance Claim Prediction API",
     description="Predict Insurance Claim Category",
     version="1.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # =====================================================
@@ -161,6 +175,12 @@ def home():
 
 @app.post("/predict")
 def predict_claim(data: InsuranceInput):
+
+    if model is None:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Model not loaded"}
+        )
 
     # ---------------------------------------------
     # CREATE INPUT DICTIONARY
